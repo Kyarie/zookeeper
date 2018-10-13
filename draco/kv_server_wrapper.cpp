@@ -9,11 +9,11 @@ KVServer *KVServer_ctor(int serverID) {
 }
 
 extern "C" DLL_EXPORT void KVServer_put(KVServer *self, 
-	std::string key, std::string value) {
+	char * key, char * value) {
 	self->put(key, value);
 }
 
-extern "C" DLL_EXPORT std::string KVServer_get(KVServer *self, 
-	std::string key) {
+extern "C" DLL_EXPORT char * KVServer_get(KVServer *self, 
+	char * key) {
 	return self->get(key);
 }

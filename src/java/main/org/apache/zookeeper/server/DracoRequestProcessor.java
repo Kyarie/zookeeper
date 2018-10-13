@@ -38,8 +38,12 @@ RequestProcessor {
 	    RequestProcessor nextProcessor) {
 		super("DracoRequestProcessor:" + zks.getServerId(), zks
 		        .getZooKeeperServerListener());
+		LOG.info("DracoRequestProcessor constructor");
 		this.zks = zks;
 		this.nextProcessor = nextProcessor;
+		this.kvServer.put("/hi", "hi");
+		String key = this.kvServer.get("/hi");
+		LOG.info("C++ return " + key);
 	}
 	
 	@Override
@@ -88,7 +92,6 @@ RequestProcessor {
                 getDataRequest);
 		String key = getDataRequest.getPath();
 		LOG.info("GET Draco Path: " + key);
-		LOG.info("GET Draco Data: " + dracoKv.get(key).toString());
 		this.kvServer.get(key);
 	}
 	

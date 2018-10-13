@@ -12,14 +12,20 @@ public:
 		std::cout << "KVServer constructor\n";
 	}
 
-	void put(std::string key, std::string value) {
-		std::cout << "PUT\n";
-		this->kvm[key] = value;
+	void put(char *key, char *value) {
+		std::cout << "PUT " << key << " " << value << "\n";
+		std::string sk(key);
+		std::string sv(value);
+		this->kvm[sk] = sv;
+		std::cout << this->kvm[sk] << "\n";
 	}
 
-	std::string get(std::string key) {
-		std::cout << "GET\n";
-		return this->kvm[key];
+	char *get(char* key) {
+		std::cout << "GET " << key << "\n";
+		std::string sk(key);
+		std::cout << this->kvm[sk] << "\n";
+		char *c = new char[sk.length()+1];
+		return c;
 	}
 
 };

@@ -30,6 +30,8 @@ RequestProcessor {
 	
 	RequestProcessor nextProcessor;
 	
+	private KVServer kvServer = new KVServer(0);
+	
 	private Map<String, byte[]> dracoKv = new HashMap<String, byte[]>();
 	
 	public DracoRequestProcessor(ZooKeeperServer zks,
@@ -73,8 +75,11 @@ RequestProcessor {
 	private void putDraco(Request request, TxnHeader hdr, Record txn) {
 		CreateTxn createTxn = (CreateTxn) txn;
 		dracoKv.put(createTxn.getPath(), createTxn.getData());
-        LOG.info("PUT Draco Path: " + createTxn.getPath());
-        LOG.info("PUT Draco Data: " + createTxn.getData().toString());
+		String key = createTxn.getPath();
+		String value = createTxn.getData().toString();
+        LOG.info("PUT Draco Path: " + key);
+        LOG.info("PUT Draco Data: " + value);
+        this.kvServer.put(key, value);
 	}
 	
 	private void getDraco(Request request) throws IOException {
@@ -84,6 +89,7 @@ RequestProcessor {
 		String key = getDataRequest.getPath();
 		LOG.info("GET Draco Path: " + key);
 		LOG.info("GET Draco Data: " + dracoKv.get(key).toString());
+		this.kvServer.get(key);
 	}
 	
 	@Override

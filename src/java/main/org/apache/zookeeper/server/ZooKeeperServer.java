@@ -477,12 +477,12 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
 
     protected void setupRequestProcessors() {
         RequestProcessor finalProcessor = new FinalRequestProcessor(this);
-        DracoRequestProcessor dracoProcessor = 
-        		new DracoRequestProcessor(this, finalProcessor);
+        //DracoRequestProcessor dracoProcessor = 
+        		//new DracoRequestProcessor(this, finalProcessor);
         //RequestProcessor syncProcessor = new SyncRequestProcessor(this,
-                //finalProcessor);
+        		//dracoProcessor);
         //((SyncRequestProcessor)syncProcessor).start();
-        firstProcessor = new PrepRequestProcessor(this, dracoProcessor);
+        firstProcessor = new PrepRequestProcessor(this, finalProcessor);
         ((PrepRequestProcessor)firstProcessor).start();
         
     }

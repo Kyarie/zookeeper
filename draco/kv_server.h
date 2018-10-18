@@ -2,6 +2,7 @@
 #include <map>
 #include <string>
 #include <stdint.h>
+#include <string.h>
 
 class KVServer {
 	std::map<std::string, std::string> kvm;
@@ -22,9 +23,10 @@ public:
 
 	char *get(char* key) {
 		std::cout << "GET " << key << "\n";
-		std::string sk(key);
-		std::cout << this->kvm[sk] << "\n";
+		std::string sk(this->kvm[key]);
+		std::cout << this->kvm[key] << "\n";
 		char *c = new char[sk.length()+1];
+		strcpy(c, sk.c_str());
 		return c;
 	}
 

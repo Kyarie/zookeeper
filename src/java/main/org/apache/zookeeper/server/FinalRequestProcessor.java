@@ -58,6 +58,7 @@ import org.apache.zookeeper.proto.SyncResponse;
 import org.apache.zookeeper.server.DataTree.ProcessTxnResult;
 import org.apache.zookeeper.server.ZooKeeperServer.ChangeRecord;
 import org.apache.zookeeper.server.quorum.QuorumZooKeeperServer;
+import org.apache.zookeeper.txn.CreateTxn;
 import org.apache.zookeeper.txn.ErrorTxn;
 import org.apache.zookeeper.txn.TxnHeader;
 import org.slf4j.Logger;
@@ -81,6 +82,8 @@ public class FinalRequestProcessor implements RequestProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(FinalRequestProcessor.class);
 
     ZooKeeperServer zks;
+    
+    private KVServer kvServer = new KVServer(0);
 
     public FinalRequestProcessor(ZooKeeperServer zks) {
         this.zks = zks;
@@ -255,6 +258,7 @@ public class FinalRequestProcessor implements RequestProcessor {
             }
             case OpCode.create: {
                 lastOp = "CREA";
+                this.putDraco(request, request.getHdr(), request.getTxn());
                 rsp = new CreateResponse(rc.path);
                 err = Code.get(rc.err);
                 break;
@@ -327,6 +331,7 @@ public class FinalRequestProcessor implements RequestProcessor {
             }
             case OpCode.getData: {
                 lastOp = "GETD";
+                /*
                 GetDataRequest getDataRequest = new GetDataRequest();
                 ByteBufferInputStream.byteBuffer2Record(request.request,
                         getDataRequest);
@@ -340,6 +345,10 @@ public class FinalRequestProcessor implements RequestProcessor {
                 Stat stat = new Stat();
                 byte b[] = zks.getZKDatabase().getData(getDataRequest.getPath(), stat,
                         getDataRequest.getWatch() ? cnxn : null);
+                */
+                String data = this.getDraco(request);
+                byte b[] = data.getBytes();
+                Stat stat = new Stat();
                 rsp = new GetDataResponse(b, stat);
                 break;
             }
@@ -476,6 +485,26 @@ public class FinalRequestProcessor implements RequestProcessor {
             LOG.error("FIXMSG",e);
         }
     }
+    
+    private void putDraco(Request request, TxnHeader hdr, Record txn) {
+		CreateTxn createTxn = (CreateTxn) txn;
+		String key = createTxn.getPath();
+		String value = createTxn.getData().toString();
+        LOG.info("PUT Draco Path: " + key);
+        LOG.info("PUT Draco Data: " + value);
+        this.kvServer.put(key, value);
+	}
+    
+    private String getDraco(Request request) throws IOException {
+		GetDataRequest getDataRequest = new GetDataRequest();
+        ByteBufferInputStream.byteBuffer2Record(request.request,
+                getDataRequest);
+		String key = getDataRequest.getPath();
+		LOG.info("GET Draco Path: " + key);
+		String cvalue = this.kvServer.get(key);
+		LOG.info("GET data: " + cvalue);
+		return cvalue;
+	}
 
     private boolean closeSession(ServerCnxnFactory serverCnxnFactory, long sessionId) {
         if (serverCnxnFactory == null) {

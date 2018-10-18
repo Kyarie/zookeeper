@@ -53,11 +53,11 @@ RequestProcessor {
 		try {
 			switch (request.type) {
 				case OpCode.create: {
-		            this.putDraco(request, request.getHdr(), request.getTxn());
+		            //this.putDraco(request, request.getHdr(), request.getTxn());
 		            break;
 		        }
 				case OpCode.getData: {
-	                this.getDraco(request);
+	                //this.getDraco(request);
 	                break;
 	            } default: {
 	            	LOG.info("Draco does not support this action: " + request.type);
@@ -92,7 +92,8 @@ RequestProcessor {
                 getDataRequest);
 		String key = getDataRequest.getPath();
 		LOG.info("GET Draco Path: " + key);
-		this.kvServer.get(key);
+		String cvalue = this.kvServer.get(key);
+		LOG.info("GET data: " + cvalue);
 	}
 	
 	@Override

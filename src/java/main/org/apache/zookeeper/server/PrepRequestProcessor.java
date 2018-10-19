@@ -901,9 +901,11 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
             }
         }
         request.zxid = zks.getZxid();
-        long end = System.nanoTime();
-        long microseconds = (end-start)/1000;
-        LOG.info("Prep Duration: " + microseconds);
+        if (LOG.isDebugEnabled()) {
+	        long end = System.nanoTime();
+	        long microseconds = (end-start)/1000;
+	        LOG.info("Prep Duration: " + microseconds);
+        }
         nextProcessor.processRequest(request);
     }
 

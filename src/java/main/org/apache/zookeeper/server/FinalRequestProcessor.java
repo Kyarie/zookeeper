@@ -263,7 +263,7 @@ public class FinalRequestProcessor implements RequestProcessor {
             }
             case OpCode.create: {      
                 lastOp = "CREA";
-                this.putDraco(request, request.getHdr(), request.getTxn());
+                //this.putDraco(request, request.getHdr(), request.getTxn());
                 rsp = new CreateResponse(rc.path);
                 err = Code.get(rc.err);
                 break;
@@ -351,7 +351,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                 byte b[] = zks.getZKDatabase().getData(getDataRequest.getPath(), stat,
                         getDataRequest.getWatch() ? cnxn : null);
                 */
-                String data = this.getDraco(request);
+                String data = "";//this.getDraco(request);
                 byte b[] = data.getBytes();
                 Stat stat = new Stat();
                 rsp = new GetDataResponse(b, stat);
@@ -488,10 +488,12 @@ public class FinalRequestProcessor implements RequestProcessor {
             }
         } catch (IOException e) {
             LOG.error("FIXMSG",e);
-        }       
-        long end = System.nanoTime();
-        long microseconds = (end-start)/1000;
-        LOG.info("Final Duration: " + microseconds);
+        } 
+        if (LOG.isDebugEnabled()) {
+	        long end = System.nanoTime();
+	        long microseconds = (end-start)/1000;
+	        LOG.info("Final Duration: " + microseconds);
+        }
     }
     
     private void putDraco(Request request, TxnHeader hdr, Record txn) {

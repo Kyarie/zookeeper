@@ -728,7 +728,8 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
      * @param request
      */
     protected void pRequest(Request request) throws RequestProcessorException {
-        // LOG.info("Prep>>> cxid = " + request.cxid + " type = " +
+    	long start = System.nanoTime();
+    	// LOG.info("Prep>>> cxid = " + request.cxid + " type = " +
         // request.type + " id = 0x" + Long.toHexString(request.sessionId));
         request.setHdr(null);
         request.setTxn(null);
@@ -900,6 +901,9 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
             }
         }
         request.zxid = zks.getZxid();
+        long end = System.nanoTime();
+        long microseconds = (end-start)/1000;
+        LOG.info("Prep Duration: " + microseconds);
         nextProcessor.processRequest(request);
     }
 

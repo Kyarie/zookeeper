@@ -64,6 +64,8 @@ import org.apache.zookeeper.txn.TxnHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jline.internal.Log;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -89,7 +91,7 @@ public class FinalRequestProcessor implements RequestProcessor {
         this.zks = zks;
     }
 
-    public void processRequest(Request request) {
+    public void processRequest(Request request) {    	
         if (LOG.isDebugEnabled()) {
             LOG.debug("Processing request:: " + request);
         }
@@ -102,6 +104,7 @@ public class FinalRequestProcessor implements RequestProcessor {
             ZooTrace.logRequest(LOG, traceMask, 'E', request, "");
         }
         ProcessTxnResult rc = null;
+        
         synchronized (zks.outstandingChanges) {
             // Need to process local session requests
             rc = zks.processTxn(request);
@@ -125,9 +128,10 @@ public class FinalRequestProcessor implements RequestProcessor {
             }
 
             // do not add non quorum packets to the queue.
+            /*
             if (request.isQuorum()) {
                 zks.getZKDatabase().addCommittedProposal(request);
-            }
+            }*/
         }
 
         // ZOOKEEPER-558:
@@ -199,6 +203,7 @@ public class FinalRequestProcessor implements RequestProcessor {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("{}",request);
             }
+            
             switch (request.type) {
             case OpCode.ping: {
                 lastOp = "PING";
@@ -256,7 +261,7 @@ public class FinalRequestProcessor implements RequestProcessor {
 
                 break;
             }
-            case OpCode.create: {
+            case OpCode.create: {      
                 lastOp = "CREA";
                 this.putDraco(request, request.getHdr(), request.getTxn());
                 rsp = new CreateResponse(rc.path);
@@ -470,7 +475,7 @@ public class FinalRequestProcessor implements RequestProcessor {
             LOG.error("Dumping request buffer: 0x" + sb.toString());
             err = Code.MARSHALLINGERROR;
         }
-
+        long start = System.nanoTime();
         ReplyHeader hdr =
             new ReplyHeader(request.cxid, lastZxid, err.intValue());
 
@@ -483,15 +488,20 @@ public class FinalRequestProcessor implements RequestProcessor {
             }
         } catch (IOException e) {
             LOG.error("FIXMSG",e);
-        }
+        }       
+        long end = System.nanoTime();
+        long microseconds = (end-start)/1000;
+        LOG.info("Final Duration: " + microseconds);
     }
     
     private void putDraco(Request request, TxnHeader hdr, Record txn) {
 		CreateTxn createTxn = (CreateTxn) txn;
 		String key = createTxn.getPath();
 		String value = createTxn.getData().toString();
-        LOG.info("PUT Draco Path: " + key);
-        LOG.info("PUT Draco Data: " + value);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("PUT Draco Path: " + key);
+	        LOG.debug("PUT Draco Data: " + value);
+        }        
         this.kvServer.put(key, value);
 	}
     
@@ -499,10 +509,12 @@ public class FinalRequestProcessor implements RequestProcessor {
 		GetDataRequest getDataRequest = new GetDataRequest();
         ByteBufferInputStream.byteBuffer2Record(request.request,
                 getDataRequest);
-		String key = getDataRequest.getPath();
-		LOG.info("GET Draco Path: " + key);
-		String cvalue = this.kvServer.get(key);
-		LOG.info("GET data: " + cvalue);
+		String key = getDataRequest.getPath();		
+		String cvalue = this.kvServer.get(key);		
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("GET Draco Path: " + key);
+			LOG.debug("GET data: " + cvalue);
+        }    
 		return cvalue;
 	}
 

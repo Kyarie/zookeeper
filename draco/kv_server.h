@@ -14,17 +14,17 @@ public:
 	}
 
 	void put(char *key, char *value) {
-		std::cout << "PUT " << key << " " << value << "\n";
+		//std::cout << "PUT " << key << " " << value << "\n";
 		std::string sk(key);
 		std::string sv(value);
 		this->kvm[sk] = sv;
-		std::cout << this->kvm[sk] << "\n";
+		//std::cout << this->kvm[sk] << "\n";
 	}
 
 	char *get(char* key) {
-		std::cout << "GET " << key << "\n";
+		//std::cout << "GET " << key << "\n";
 		std::string sk(this->kvm[key]);
-		std::cout << this->kvm[key] << "\n";
+		//std::cout << this->kvm[key] << "\n";
 		char *c = new char[sk.length()+1];
 		strcpy(c, sk.c_str());
 		return c;

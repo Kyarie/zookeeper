@@ -81,9 +81,11 @@ public class FinalRequestProcessor implements RequestProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(FinalRequestProcessor.class);
 
     ZooKeeperServer zks;
+    DracoClient dc;
 
     public FinalRequestProcessor(ZooKeeperServer zks) {
         this.zks = zks;
+        this.dc = new DracoClient();
     }
 
     public void processRequest(Request request) {
@@ -341,6 +343,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                 byte b[] = zks.getZKDatabase().getData(getDataRequest.getPath(), stat,
                         getDataRequest.getWatch() ? cnxn : null);
                 rsp = new GetDataResponse(b, stat);
+                this.dc.get(getDataRequest.getPath());
                 break;
             }
             case OpCode.setWatches: {

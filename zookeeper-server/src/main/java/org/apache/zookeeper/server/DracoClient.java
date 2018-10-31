@@ -17,6 +17,10 @@ public class DracoClient {
 	int READ_REQUEST = 1;
 	int WRITE_REQUEST = 2;
 	int WRITE_OK = 1000;
+	PrintStream out = null;
+	InputStreamReader in = null;
+	DataOutputStream dout = null;
+	DataInputStream din = null;
 
     public DracoClient() {
     	int port = 5000;
@@ -29,45 +33,104 @@ public class DracoClient {
 			LOG.error(e.getMessage());
 			//e.printStackTrace();
 		}
-    	get("hi");
     }
     
     public String get(String key) {
-    	int req_type = htonl(READ_REQUEST);
-    	String value = "";  
-    	send(key);
+    	int req_type = READ_REQUEST;
+    	sendInt(req_type);
+    	
+    	int key_len = key.length();
+    	sendInt(req_type);
+    	
+    	sendStr(key);
+    	
+    	int value_len = recvInt();
+    	
+    	String value = recvStr();
+    	
     	return value;
     }
     
     public void put(String key, String value) {
-    	int req_type = htonl(WRITE_REQUEST);
-    	send(key);
+    	int req_type = WRITE_REQUEST;
+    	sendInt(req_type);
+    	
+    	int key_len = key.length();
+    	sendInt(key_len);
+    	
+    	sendStr(key);
+    	
+    	int value_len = value.length();
+    	sendInt(value_len);
+    	
+    	sendStr(value);
+    	
+    	int ack = recvInt();
+    	
+    	if (LOG.isDebugEnabled()) {
+			LOG.debug("draco put ack: " + ack);
+		}
     }
     
-    public String send(String data) {    	
-    	String value = "";
-    	PrintStream out = null;
-    	InputStreamReader in = null;
+    private void sendInt(int data) {
+    	int modData = data;
     	try {
-    		LOG.info("draco send: " + data);
+    		if (LOG.isDebugEnabled()) {
+    			LOG.debug("draco send: " + data);
+    		}
+			dout = new DataOutputStream(socket.getOutputStream());
+			dout.write(modData);
+		} catch (IOException e) {
+			LOG.error(e.getMessage());
+			e.printStackTrace();
+		}    			
+    }
+    
+    private int recvInt() {
+    	int result = 0;
+    	try {
+			din = new DataInputStream(socket.getInputStream());
+			result = din.readInt();
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("draco get: " + result);
+    		}	    	
+			LOG.info("draco get: " + result);
+		} catch (IOException e) {
+			LOG.error(e.getMessage());
+			e.printStackTrace();
+		}    			
+    	return result;
+    }
+    
+    private void sendStr(String data) {   	
+    	try {
+    		if (LOG.isDebugEnabled()) {
+    			LOG.debug("draco send: " + data);
+    		}
 			out = new PrintStream(socket.getOutputStream());
 			out.println(data);
 		} catch (IOException e) {
 			LOG.error(e.getMessage());
 			e.printStackTrace();
-		}    	
-		try {
+		}    			
+    }
+    
+    private String recvStr() {
+    	String value = "";  
+    	try {
 			in = new InputStreamReader(socket.getInputStream());
 			BufferedReader br = new BufferedReader(in);
 			value = br.readLine();
-	    	LOG.info("draco get: " + value);
+			if (LOG.isDebugEnabled()) {
+				LOG.info("draco get: " + value);
+    		}	    	
 		} catch (IOException e) {
 			LOG.error(e.getMessage());
 			e.printStackTrace();
 		}
     	return value;
     }
-    
+
     private int htonl(int value) {
     	return ByteBuffer.allocate(4).putInt(value)
     			.order(ByteOrder.nativeOrder()).getInt(0);

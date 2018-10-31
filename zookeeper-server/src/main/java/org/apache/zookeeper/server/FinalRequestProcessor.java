@@ -58,6 +58,7 @@ import org.apache.zookeeper.proto.SyncResponse;
 import org.apache.zookeeper.server.DataTree.ProcessTxnResult;
 import org.apache.zookeeper.server.ZooKeeperServer.ChangeRecord;
 import org.apache.zookeeper.server.quorum.QuorumZooKeeperServer;
+import org.apache.zookeeper.txn.CreateTxn;
 import org.apache.zookeeper.txn.ErrorTxn;
 import org.apache.zookeeper.txn.TxnHeader;
 import org.slf4j.Logger;
@@ -257,6 +258,8 @@ public class FinalRequestProcessor implements RequestProcessor {
             }
             case OpCode.create: {
                 lastOp = "CREA";
+                CreateTxn createTxn = (CreateTxn) request.getTxn();
+                this.dc.put(createTxn.getPath(), createTxn.getData().toString());
                 rsp = new CreateResponse(rc.path);
                 err = Code.get(rc.err);
                 break;
@@ -329,9 +332,11 @@ public class FinalRequestProcessor implements RequestProcessor {
             }
             case OpCode.getData: {
                 lastOp = "GETD";
-                GetDataRequest getDataRequest = new GetDataRequest();
+                
+                GetDataRequest getDataRequest = new GetDataRequest();                
                 ByteBufferInputStream.byteBuffer2Record(request.request,
                         getDataRequest);
+                /*
                 DataNode n = zks.getZKDatabase().getNode(getDataRequest.getPath());
                 if (n == null) {
                     throw new KeeperException.NoNodeException();
@@ -342,8 +347,11 @@ public class FinalRequestProcessor implements RequestProcessor {
                 Stat stat = new Stat();
                 byte b[] = zks.getZKDatabase().getData(getDataRequest.getPath(), stat,
                         getDataRequest.getWatch() ? cnxn : null);
-                rsp = new GetDataResponse(b, stat);
-                this.dc.get(getDataRequest.getPath());
+                */
+                Stat stat = new Stat();
+                String data = this.dc.get(getDataRequest.getPath());
+                byte b[] = data.getBytes();
+                rsp = new GetDataResponse(b, stat);              
                 break;
             }
             case OpCode.setWatches: {

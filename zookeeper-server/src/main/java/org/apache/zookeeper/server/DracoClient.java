@@ -34,14 +34,6 @@ public class DracoClient {
 			LOG.error(e.getMessage());
 			//e.printStackTrace();
 		}
-    	try {
-			put("zk", "test");
-			String temp = get("zk");
-			LOG.info("RESULT " + temp);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
     }    
     
     public String get(String key) throws IOException {

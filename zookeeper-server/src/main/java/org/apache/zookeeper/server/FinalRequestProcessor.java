@@ -259,7 +259,7 @@ public class FinalRequestProcessor implements RequestProcessor {
             case OpCode.create: {
                 lastOp = "CREA";
                 CreateTxn createTxn = (CreateTxn) request.getTxn();
-                this.dc.put(createTxn.getPath(), createTxn.getData().toString());
+                this.dc.put(createTxn.getPath(), new String(createTxn.getData()));
                 rsp = new CreateResponse(rc.path);
                 err = Code.get(rc.err);
                 break;

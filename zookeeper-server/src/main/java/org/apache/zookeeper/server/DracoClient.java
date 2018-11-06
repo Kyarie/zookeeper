@@ -24,7 +24,7 @@ public class DracoClient {
 	boolean debug = true;
 
     public DracoClient() {
-    	int port = 5000;
+    	int port = 5500;
     	try {
 			socket = new Socket(InetAddress.getLocalHost(), port);
 		} catch (UnknownHostException e) {
@@ -34,7 +34,8 @@ public class DracoClient {
 			LOG.error(e.getMessage());
 			//e.printStackTrace();
 		}
-    }
+    	put("zk", "test");
+    }    
     
     public String get(String key) {
     	int req_type = READ_REQUEST;
@@ -64,6 +65,17 @@ public class DracoClient {
     	try {
     		if (debug) LOG.info("Sending data key " + key);
 			socket.getOutputStream().write(data);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    	byte[] ackBt = new byte[4];
+    	try {
+			int ack = socket.getInputStream().read(ackBt);
+			ByteBuffer ackBuf = ByteBuffer.wrap(ackBt);
+			int ack2 = ackBuf.getInt();
+			if (debug) LOG.info("ack " + ack + " " + ack2);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

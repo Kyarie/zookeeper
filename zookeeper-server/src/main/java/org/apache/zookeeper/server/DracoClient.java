@@ -21,6 +21,7 @@ public class DracoClient {
 	InputStreamReader in = null;
 	DataOutputStream dout = null;
 	DataInputStream din = null;
+	boolean debug = true;
 
     public DracoClient() {
     	int port = 5000;
@@ -50,7 +51,26 @@ public class DracoClient {
     	
     	return value;
     }
+
+    public void put(String key, String value) {
+    	int bufSize = 12 + key.length() + value.length();
+    	ByteBuffer buffer = ByteBuffer.allocate(bufSize);
+    	buffer.putInt(WRITE_REQUEST);
+    	buffer.putInt(key.length());
+    	buffer.put(key.getBytes());
+    	buffer.putInt(value.length());
+    	buffer.put(value.getBytes());
+    	byte[] data = buffer.array();
+    	try {
+    		if (debug) LOG.info("Sending data key " + key);
+			socket.getOutputStream().write(data);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
     
+    /*
     public void put(String key, String value) {
     	int req_type = WRITE_REQUEST;
     	sendInt(req_type);
@@ -70,7 +90,7 @@ public class DracoClient {
     	if (LOG.isDebugEnabled()) {
 			LOG.debug("draco put ack: " + ack);
 		}
-    }
+    }*/
     
     private void sendInt(int data) {
     	int modData = data;

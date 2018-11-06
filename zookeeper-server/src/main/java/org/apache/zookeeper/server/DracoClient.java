@@ -34,26 +34,40 @@ public class DracoClient {
 			LOG.error(e.getMessage());
 			//e.printStackTrace();
 		}
-    	put("zk", "test");
+    	try {
+			put("zk", "test");
+			String temp = get("zk");
+			LOG.info("RESULT " + temp);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }    
     
-    public String get(String key) {
-    	int req_type = READ_REQUEST;
-    	sendInt(req_type);
-    	
-    	int key_len = key.length();
-    	sendInt(req_type);
-    	
-    	sendStr(key);
-    	
-    	int value_len = recvInt();
-    	
-    	String value = recvStr();
-    	
+    public String get(String key) throws IOException {
+    	int bufSize = 12 + key.length();
+    	ByteBuffer buffer = ByteBuffer.allocate(bufSize);
+    	buffer.putInt(READ_REQUEST);
+    	buffer.putInt(key.length());
+    	buffer.put(key.getBytes());
+    	byte[] data = buffer.array();
+    	if (debug) LOG.info("Sending data key " + key);
+		socket.getOutputStream().write(data); 
+		
+    	byte[] valLenBt = new byte[4];
+		int rc = socket.getInputStream().read(valLenBt);
+		ByteBuffer valLenBuf = ByteBuffer.wrap(valLenBt);
+		int valLen = valLenBuf.getInt();
+		if (debug) LOG.info("value length " + valLen);
+		
+		byte[] valueBt = new byte[valLen];
+		rc = socket.getInputStream().read(valueBt);
+		String value = new String (valueBt);
+		if (debug) LOG.info("value " + valLen);    	
     	return value;
     }
 
-    public void put(String key, String value) {
+    public void put(String key, String value) throws IOException {
     	int bufSize = 12 + key.length() + value.length();
     	ByteBuffer buffer = ByteBuffer.allocate(bufSize);
     	buffer.putInt(WRITE_REQUEST);
@@ -62,110 +76,14 @@ public class DracoClient {
     	buffer.putInt(value.length());
     	buffer.put(value.getBytes());
     	byte[] data = buffer.array();
-    	try {
-    		if (debug) LOG.info("Sending data key " + key);
-			socket.getOutputStream().write(data);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	
+    	if (debug) LOG.info("Sending data key " + key);
+		socket.getOutputStream().write(data);    	
+		
     	byte[] ackBt = new byte[4];
-    	try {
-			int ack = socket.getInputStream().read(ackBt);
-			ByteBuffer ackBuf = ByteBuffer.wrap(ackBt);
-			int ack2 = ackBuf.getInt();
-			if (debug) LOG.info("ack " + ack + " " + ack2);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    }
-    
-    /*
-    public void put(String key, String value) {
-    	int req_type = WRITE_REQUEST;
-    	sendInt(req_type);
-    	
-    	int key_len = key.length();
-    	sendInt(key_len);
-    	
-    	sendStr(key);
-    	
-    	int value_len = value.length();
-    	sendInt(value_len);
-    	
-    	sendStr(value);
-    	
-    	int ack = recvInt();
-    	
-    	if (LOG.isDebugEnabled()) {
-			LOG.debug("draco put ack: " + ack);
-		}
-    }*/
-    
-    private void sendInt(int data) {
-    	int modData = data;
-    	try {
-    		if (LOG.isDebugEnabled()) {
-    			LOG.debug("draco send: " + data);
-    		}
-			dout = new DataOutputStream(socket.getOutputStream());
-			dout.write(modData);
-		} catch (IOException e) {
-			LOG.error(e.getMessage());
-			e.printStackTrace();
-		}    			
-    }
-    
-    private int recvInt() {
-    	int result = 0;
-    	try {
-			din = new DataInputStream(socket.getInputStream());
-			result = din.readInt();
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("draco get: " + result);
-    		}	    	
-			LOG.info("draco get: " + result);
-		} catch (IOException e) {
-			LOG.error(e.getMessage());
-			e.printStackTrace();
-		}    			
-    	return result;
-    }
-    
-    private void sendStr(String data) {   	
-    	try {
-    		if (LOG.isDebugEnabled()) {
-    			LOG.debug("draco send: " + data);
-    		}
-			out = new PrintStream(socket.getOutputStream());
-			out.println(data);
-		} catch (IOException e) {
-			LOG.error(e.getMessage());
-			e.printStackTrace();
-		}    			
-    }
-    
-    private String recvStr() {
-    	String value = "";  
-    	try {
-			in = new InputStreamReader(socket.getInputStream());
-			BufferedReader br = new BufferedReader(in);
-			value = br.readLine();
-			if (LOG.isDebugEnabled()) {
-				LOG.info("draco get: " + value);
-    		}	    	
-		} catch (IOException e) {
-			LOG.error(e.getMessage());
-			e.printStackTrace();
-		}
-    	return value;
-    }
-
-    private int htonl(int value) {
-    	return ByteBuffer.allocate(4).putInt(value)
-    			.order(ByteOrder.nativeOrder()).getInt(0);
+		int rc = socket.getInputStream().read(ackBt);
+		ByteBuffer ackBuf = ByteBuffer.wrap(ackBt);
+		int ack = ackBuf.getInt();
+		if (debug) LOG.info("ack " + ack);
     }
     
 }

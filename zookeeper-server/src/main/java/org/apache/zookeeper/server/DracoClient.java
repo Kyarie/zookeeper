@@ -45,7 +45,7 @@ public class DracoClient {
     }    
     
     public String get(String key) throws IOException {
-    	int bufSize = 12 + key.length();
+    	int bufSize = 8 + key.length();
     	ByteBuffer buffer = ByteBuffer.allocate(bufSize);
     	buffer.putInt(READ_REQUEST);
     	buffer.putInt(key.length());
@@ -63,7 +63,7 @@ public class DracoClient {
 		byte[] valueBt = new byte[valLen];
 		rc = socket.getInputStream().read(valueBt);
 		String value = new String (valueBt);
-		if (debug) LOG.info("value " + valLen);    	
+		if (debug) LOG.info("value " + value);    	
     	return value;
     }
 

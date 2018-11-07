@@ -21,12 +21,14 @@ public class DracoClient {
 	InputStreamReader in = null;
 	DataOutputStream dout = null;
 	DataInputStream din = null;
-	boolean debug = true;
+	boolean debug = false;
+        boolean lat_test = false;
 
     public DracoClient() {
     	int port = 5500;
     	try {
 			socket = new Socket(InetAddress.getLocalHost(), port);
+                socket.setTcpNoDelay(true);
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			LOG.error(e.getMessage());
@@ -60,6 +62,7 @@ public class DracoClient {
     }
 
     public void put(String key, String value) throws IOException {
+        long start = System.nanoTime(); 
     	int bufSize = 12 + key.length() + value.length();
     	ByteBuffer buffer = ByteBuffer.allocate(bufSize);
     	buffer.putInt(WRITE_REQUEST);
@@ -76,6 +79,11 @@ public class DracoClient {
 		ByteBuffer ackBuf = ByteBuffer.wrap(ackBt);
 		int ack = ackBuf.getInt();
 		if (debug) LOG.info("ack " + ack);
-    }
+        if (lat_test) {
+        	long end = System.nanoTime(); 
+        	long microseconds = (end-start)/1000; 
+        	LOG.info("Final Duration: " + microseconds); 
+        }
+       }
     
 }

@@ -37,9 +37,8 @@ public class DracoClient implements Runnable {
     	this.st = st;
     	try {
 			socket = new Socket(InetAddress.getLocalHost(), port);
-                socket.setTcpNoDelay(true);
+			socket.setTcpNoDelay(true);
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
 			LOG.error(e.getMessage());
 		} catch (IOException e) {
 			LOG.error(e.getMessage());
@@ -103,6 +102,7 @@ public class DracoClient implements Runnable {
     }
 
 	public void run() {
+		LOG.info("Running thread " + threadName);
 		while (true) {
 			Request rq = this.st.reqQueue.poll();
 			try {

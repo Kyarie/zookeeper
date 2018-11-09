@@ -332,11 +332,10 @@ public class FinalRequestProcessor implements RequestProcessor {
             }
             case OpCode.getData: {
                 lastOp = "GETD";
-                
+                /*
                 GetDataRequest getDataRequest = new GetDataRequest();                
                 ByteBufferInputStream.byteBuffer2Record(request.request,
-                        getDataRequest);
-                /*
+                        getDataRequest);                
                 DataNode n = zks.getZKDatabase().getNode(getDataRequest.getPath());
                 if (n == null) {
                     throw new KeeperException.NoNodeException();
@@ -350,7 +349,9 @@ public class FinalRequestProcessor implements RequestProcessor {
                 */
                 Stat stat = new Stat();
                 this.zks.st.reqQueue.add(request);
-                while (!request.dracoDone) {            		
+                long startTime = Time.currentElapsedTime();
+                while (!request.dracoDone && 
+                		Time.currentElapsedTime() - startTime < 1000) {            		
             	}            	
                 byte b[] = request.dracoReturnVal.getBytes();
                 rsp = new GetDataResponse(b, stat);              

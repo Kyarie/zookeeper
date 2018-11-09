@@ -84,6 +84,9 @@ public class Request {
 
     public QuorumVerifier qv = null;
     
+    public boolean dracoDone = false;
+    public String dracoReturnVal;
+    
     /**
      * If this is a create or close request for a local-only session.
      */

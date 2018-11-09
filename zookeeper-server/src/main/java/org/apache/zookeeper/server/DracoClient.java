@@ -6,14 +6,20 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import org.apache.zookeeper.Environment;
+import org.apache.zookeeper.ZooDefs.OpCode;
+import org.apache.zookeeper.proto.GetDataRequest;
+import org.apache.zookeeper.txn.CreateTxn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DracoClient {
+public class DracoClient implements Runnable {
 	private static final Logger LOG = 
 			LoggerFactory.getLogger(DracoClient.class);
 
+	private SiftThread st;
+	
 	private Socket socket = null;
+	private Thread t;
 	int READ_REQUEST = 1;
 	int WRITE_REQUEST = 2;
 	int WRITE_OK = 1000;
@@ -22,10 +28,13 @@ public class DracoClient {
 	DataOutputStream dout = null;
 	DataInputStream din = null;
 	boolean debug = false;
-        boolean lat_test = false;
+    boolean lat_test = false;
+    String threadName;
 
-    public DracoClient() {
+    public DracoClient(SiftThread st, int threadNum) {
     	int port = 5500;
+    	this.threadName = "DracoClient" + threadNum;
+    	this.st = st;
     	try {
 			socket = new Socket(InetAddress.getLocalHost(), port);
                 socket.setTcpNoDelay(true);
@@ -86,4 +95,32 @@ public class DracoClient {
         }
        }
     
+	public void start() {
+        if (t == null) {
+            t = new Thread (this, threadName);
+            t.start();
+        }
+    }
+
+	public void run() {
+		while (true) {
+			Request rq = this.st.reqQueue.poll();
+			try {
+				if (rq != null) {
+					if (rq.type == OpCode.create) {
+						CreateTxn createTxn = (CreateTxn) rq.getTxn();
+						this.put(createTxn.getPath(), new String(createTxn.getData()));
+					} else if (rq.type == OpCode.getData) {
+						 GetDataRequest getDataRequest = new GetDataRequest();                
+		                ByteBufferInputStream.byteBuffer2Record(rq.request,
+		                        getDataRequest);
+			             rq.dracoReturnVal = this.get(getDataRequest.getPath());
+			             rq.dracoDone = true;
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }

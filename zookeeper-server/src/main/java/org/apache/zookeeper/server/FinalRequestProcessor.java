@@ -82,14 +82,18 @@ public class FinalRequestProcessor implements RequestProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(FinalRequestProcessor.class);
 
     ZooKeeperServer zks;
-    DracoClient dc;
-
+    //DracoClient dc;
+    
     public FinalRequestProcessor(ZooKeeperServer zks) {
         this.zks = zks;
-        this.dc = new DracoClient();
+        //this.dc = new DracoClient();
     }
 
     public void processRequest(Request request) {
+    	while (!request.dracoDone) {
+    		
+    	}
+    	
         if (LOG.isDebugEnabled()) {
             LOG.debug("Processing request:: " + request);
         }
@@ -259,7 +263,7 @@ public class FinalRequestProcessor implements RequestProcessor {
             case OpCode.create: {
                 lastOp = "CREA";
                 CreateTxn createTxn = (CreateTxn) request.getTxn();
-                this.dc.put(createTxn.getPath(), new String(createTxn.getData()));
+                //this.dc.put(createTxn.getPath(), new String(createTxn.getData()));
                 rsp = new CreateResponse(rc.path);
                 err = Code.get(rc.err);
                 break;
@@ -349,8 +353,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                         getDataRequest.getWatch() ? cnxn : null);
                 */
                 Stat stat = new Stat();
-                String data = this.dc.get(getDataRequest.getPath());
-                byte b[] = data.getBytes();
+                byte b[] = request.dracoReturnVal.getBytes();
                 rsp = new GetDataResponse(b, stat);              
                 break;
             }

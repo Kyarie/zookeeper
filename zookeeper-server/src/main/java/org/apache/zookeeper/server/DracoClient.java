@@ -107,6 +107,7 @@ public class DracoClient implements Runnable {
 			Request rq = this.st.reqQueue.poll();
 			try {
 				if (rq != null) {
+					if (debug) LOG.info("Draco req " + rq.type);
 					if (rq.type == OpCode.create) {
 						CreateTxn createTxn = (CreateTxn) rq.getTxn();
 						this.put(createTxn.getPath(), new String(createTxn.getData()));

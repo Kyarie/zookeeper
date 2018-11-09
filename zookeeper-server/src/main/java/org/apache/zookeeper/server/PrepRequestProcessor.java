@@ -1000,7 +1000,6 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
     }
 
     public void processRequest(Request request) {
-    	this.zks.st.reqQueue.add(request);
         submittedRequests.add(request);
     }
 

@@ -89,11 +89,7 @@ public class FinalRequestProcessor implements RequestProcessor {
         //this.dc = new DracoClient();
     }
 
-    public void processRequest(Request request) {
-    	while (!request.dracoDone) {
-    		
-    	}
-    	
+    public void processRequest(Request request) {    	
         if (LOG.isDebugEnabled()) {
             LOG.debug("Processing request:: " + request);
         }
@@ -262,8 +258,8 @@ public class FinalRequestProcessor implements RequestProcessor {
             }
             case OpCode.create: {
                 lastOp = "CREA";
+                this.zks.st.reqQueue.add(request);
                 CreateTxn createTxn = (CreateTxn) request.getTxn();
-                //this.dc.put(createTxn.getPath(), new String(createTxn.getData()));
                 rsp = new CreateResponse(rc.path);
                 err = Code.get(rc.err);
                 break;
@@ -353,6 +349,9 @@ public class FinalRequestProcessor implements RequestProcessor {
                         getDataRequest.getWatch() ? cnxn : null);
                 */
                 Stat stat = new Stat();
+                this.zks.st.reqQueue.add(request);
+                while (!request.dracoDone) {            		
+            	}            	
                 byte b[] = request.dracoReturnVal.getBytes();
                 rsp = new GetDataResponse(b, stat);              
                 break;

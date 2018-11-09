@@ -259,6 +259,10 @@ public class FinalRequestProcessor implements RequestProcessor {
             case OpCode.create: {
                 lastOp = "CREA";
                 this.zks.st.reqQueue.add(request);
+                long startTime = Time.currentElapsedTime();
+                while (!request.dracoDone && 
+                		Time.currentElapsedTime() - startTime < 1000) {            		
+            	}
                 CreateTxn createTxn = (CreateTxn) request.getTxn();
                 rsp = new CreateResponse(rc.path);
                 err = Code.get(rc.err);

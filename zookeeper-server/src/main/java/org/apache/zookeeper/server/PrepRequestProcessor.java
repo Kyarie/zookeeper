@@ -900,7 +900,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
             }
         }
         request.zxid = zks.getZxid();
-        LOG.info("TXN " + request.getTxn());
+        //LOG.info("TXN " + request.getTxn());
         this.zks.st.reqQueue.add(request);
         nextProcessor.processRequest(request);
     }

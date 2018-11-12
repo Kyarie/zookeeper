@@ -91,9 +91,12 @@ public class FinalRequestProcessor implements RequestProcessor {
 
     public void processRequest(Request request) {    
         long startTime = Time.currentElapsedTime();
-        while (!request.dracoDone && 
-        		Time.currentElapsedTime() - startTime < 10000) {            		
-    	}            	
+        if (request.type == OpCode.create || 
+        		request.type == OpCode.getData) {
+	        while (!request.dracoDone && 
+	        		Time.currentElapsedTime() - startTime < 10000) {            		
+	    	}
+        }
     	
         if (LOG.isDebugEnabled()) {
             LOG.debug("Processing request:: " + request);

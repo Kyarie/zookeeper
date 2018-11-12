@@ -7,6 +7,8 @@ import java.nio.ByteOrder;
 
 import org.apache.zookeeper.Environment;
 import org.apache.zookeeper.ZooDefs.OpCode;
+import org.apache.zookeeper.proto.CreateRequest;
+import org.apache.zookeeper.proto.CreateTTLRequest;
 import org.apache.zookeeper.proto.GetDataRequest;
 import org.apache.zookeeper.txn.CreateTxn;
 import org.slf4j.Logger;
@@ -109,8 +111,10 @@ public class DracoClient implements Runnable {
 				if (rq != null) {
 					if (debug) LOG.info("Draco req " + rq.type);
 					if (rq.type == OpCode.create) {
-						CreateTxn createTxn = (CreateTxn) rq.getTxn();
-						this.put(createTxn.getPath(), new String(createTxn.getData()));
+						CreateRequest create2Request = new CreateRequest();
+						ByteBufferInputStream.byteBuffer2Record(rq.request, create2Request);
+						this.put(create2Request.getPath(), 
+			            		new String(create2Request.getData()));
 						rq.dracoDone = true;
 					} else if (rq.type == OpCode.getData) {
 						 GetDataRequest getDataRequest = new GetDataRequest();                

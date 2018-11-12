@@ -900,8 +900,6 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
             }
         }
         request.zxid = zks.getZxid();
-        //LOG.info("TXN " + request.getTxn());
-        this.zks.st.reqQueue.add(request);
         nextProcessor.processRequest(request);
     }
 
@@ -1001,7 +999,8 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
         return rv;
     }
 
-    public void processRequest(Request request) {    	
+    public void processRequest(Request request) {
+        this.zks.st.reqQueue.add(request);
         submittedRequests.add(request);
     }
 

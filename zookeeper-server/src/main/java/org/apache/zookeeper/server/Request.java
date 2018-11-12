@@ -86,6 +86,7 @@ public class Request {
     
     public volatile boolean dracoDone = false;
     public volatile String dracoReturnVal;
+    public ByteBuffer rq;
     
     /**
      * If this is a create or close request for a local-only session.

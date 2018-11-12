@@ -112,7 +112,7 @@ public class DracoClient implements Runnable {
 					if (debug) LOG.info("Draco req " + rq.type);
 					if (rq.type == OpCode.create) {
 						CreateRequest create2Request = new CreateRequest();
-						ByteBufferInputStream.byteBuffer2Record(rq.request, create2Request);
+						ByteBufferInputStream.byteBuffer2Record(rq.rq, create2Request);
 						this.put(create2Request.getPath(), 
 			            		new String(create2Request.getData()));
 						rq.dracoDone = true;

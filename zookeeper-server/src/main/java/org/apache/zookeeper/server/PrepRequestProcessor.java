@@ -1000,10 +1000,20 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
     }
 
     public void processRequest(Request request) {
+    	request.rq = cloneByteBuffer(request.request);
         this.zks.st.reqQueue.add(request);
         submittedRequests.add(request);
     }
 
+    public static ByteBuffer cloneByteBuffer(ByteBuffer original) {
+    	ByteBuffer clone = ByteBuffer.allocate(original.capacity());
+    	original.rewind();//copy from the beginning
+    	clone.put(original);
+    	original.rewind();
+    	clone.flip();
+    	return clone;
+    } 
+    
     public void shutdown() {
         LOG.info("Shutting down");
         submittedRequests.clear();

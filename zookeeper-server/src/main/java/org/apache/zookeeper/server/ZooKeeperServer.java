@@ -469,7 +469,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
         startSessionTracker();
         setupRequestProcessors();
-        st = new SiftThread(5);
+        st = new SiftThread();
         st.launchSiftClients();
 
         registerJMX();

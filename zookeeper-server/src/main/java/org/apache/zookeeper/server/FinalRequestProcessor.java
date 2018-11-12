@@ -89,7 +89,12 @@ public class FinalRequestProcessor implements RequestProcessor {
         //this.dc = new DracoClient();
     }
 
-    public void processRequest(Request request) {    	
+    public void processRequest(Request request) {    
+        long startTime = Time.currentElapsedTime();
+        while (!request.dracoDone && 
+        		Time.currentElapsedTime() - startTime < 10000) {            		
+    	}            	
+    	
         if (LOG.isDebugEnabled()) {
             LOG.debug("Processing request:: " + request);
         }
@@ -128,7 +133,7 @@ public class FinalRequestProcessor implements RequestProcessor {
             if (request.isQuorum()) {
                 zks.getZKDatabase().addCommittedProposal(request);
             }
-        }
+        }       
 
         // ZOOKEEPER-558:
         // In some cases the server does not close the connection (e.g., closeconn buffer
@@ -258,11 +263,6 @@ public class FinalRequestProcessor implements RequestProcessor {
             }
             case OpCode.create: {
                 lastOp = "CREA";
-                this.zks.st.reqQueue.add(request);
-                long startTime = Time.currentElapsedTime();
-                while (!request.dracoDone && 
-                		Time.currentElapsedTime() - startTime < 1000) {            		
-            	}
                 CreateTxn createTxn = (CreateTxn) request.getTxn();
                 rsp = new CreateResponse(rc.path);
                 err = Code.get(rc.err);
@@ -351,12 +351,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                 byte b[] = zks.getZKDatabase().getData(getDataRequest.getPath(), stat,
                         getDataRequest.getWatch() ? cnxn : null);
                 */
-                Stat stat = new Stat();
-                this.zks.st.reqQueue.add(request);
-                long startTime = Time.currentElapsedTime();
-                while (!request.dracoDone && 
-                		Time.currentElapsedTime() - startTime < 1000) {            		
-            	}            	
+                Stat stat = new Stat();                
                 byte b[] = request.dracoReturnVal.getBytes();
                 rsp = new GetDataResponse(b, stat);              
                 break;

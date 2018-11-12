@@ -9,9 +9,9 @@ public class SiftThread {
 			new ConcurrentLinkedQueue<Request>();
 	private int numThreads;
 	private List<DracoClient> dracoClients = new ArrayList<DracoClient>();
-
-	public SiftThread (int numThreads) {
-		this.numThreads = numThreads;
+	
+	public SiftThread () {
+		this.numThreads = 5;
 	}
 
 	public void launchSiftClients() {

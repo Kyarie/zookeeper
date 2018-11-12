@@ -230,6 +230,8 @@ public class FourLetterCommands {
         }
         // zkServer.sh depends on "srvr".
         whiteListedCommands.add("srvr");
+        whiteListedCommands.add("stat");
+        whiteListedCommands.add("mntr");
         whiteListInitialized = true;
         LOG.info("The list of known four letter word commands is : {}", Arrays.asList(cmd2String));
         LOG.info("The list of enabled four letter word commands is : {}", Arrays.asList(whiteListedCommands));

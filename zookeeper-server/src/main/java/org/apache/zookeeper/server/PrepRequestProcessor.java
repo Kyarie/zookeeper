@@ -735,8 +735,9 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
 
         try {
             switch (request.type) {
-            case OpCode.createContainer:
             case OpCode.create:
+            	break;
+            case OpCode.createContainer:            
             case OpCode.create2:
                 CreateRequest create2Request = new CreateRequest();
                 pRequest2Txn(request.type, zks.getNextZxid(), request, create2Request, true);
@@ -849,9 +850,10 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
                 break;
 
             //All the rest don't need to create a Txn - just verify session
-            case OpCode.sync:
-            case OpCode.exists:
             case OpCode.getData:
+            	break;
+            case OpCode.sync:
+            case OpCode.exists:            
             case OpCode.getACL:
             case OpCode.getChildren:
             case OpCode.getChildren2:

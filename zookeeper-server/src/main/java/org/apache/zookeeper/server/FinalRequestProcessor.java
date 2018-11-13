@@ -89,14 +89,47 @@ public class FinalRequestProcessor implements RequestProcessor {
         //this.dc = new DracoClient();
     }
 
-    public void processRequest(Request request) {    
-        long startTime = Time.currentElapsedTime();
+    public void processRequest(Request request) { 
+    	long startTime = Time.currentElapsedTime();
         if (request.type == OpCode.create || 
         		request.type == OpCode.getData) {
 	        while (!request.dracoDone && 
 	        		Time.currentElapsedTime() - startTime < 10000) {            		
 	    	}
+	        ServerCnxn cnxn = request.cnxn;
+	        Code err = Code.OK;
+	        Record rsp = null;
+	        String lastOp = "NA";
+	        long lastZxid = zks.getZKDatabase().getDataTreeLastProcessedZxid();
+	        if (request.type == OpCode.create) {
+	        	lastOp = "CREA";
+                rsp = new CreateResponse(request.dracoPath);
+            } else {
+            	lastOp = "GETD";
+                Stat stat = new Stat();                
+                byte b[] = request.dracoReturnVal.getBytes();
+                rsp = new GetDataResponse(b, stat);              
+            }
+	        ReplyHeader hdr =
+	                new ReplyHeader(request.cxid, lastZxid, err.intValue());
+
+            updateStats(request, lastOp, lastZxid);
+
+            try {
+                cnxn.sendResponse(hdr, rsp, "response");
+                if (request.type == OpCode.closeSession) {
+                    cnxn.sendCloseSession();
+                }
+            } catch (IOException e) {
+                LOG.error("FIXMSG",e);
+            }
+        } else {
+        	origProcessRequest(request);
         }
+    }
+    
+    public void origProcessRequest(Request request) {    
+        
     	
         if (LOG.isDebugEnabled()) {
             LOG.debug("Processing request:: " + request);
@@ -263,14 +296,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                 }
 
                 break;
-            }
-            case OpCode.create: {
-                lastOp = "CREA";
-                CreateTxn createTxn = (CreateTxn) request.getTxn();
-                rsp = new CreateResponse(rc.path);
-                err = Code.get(rc.err);
-                break;
-            }
+            }            
             case OpCode.create2:
             case OpCode.createTTL:
             case OpCode.createContainer: {
@@ -335,28 +361,6 @@ public class FinalRequestProcessor implements RequestProcessor {
                 Stat stat = zks.getZKDatabase().statNode(path, existsRequest
                         .getWatch() ? cnxn : null);
                 rsp = new ExistsResponse(stat);
-                break;
-            }
-            case OpCode.getData: {
-                lastOp = "GETD";
-                /*
-                GetDataRequest getDataRequest = new GetDataRequest();                
-                ByteBufferInputStream.byteBuffer2Record(request.request,
-                        getDataRequest);                
-                DataNode n = zks.getZKDatabase().getNode(getDataRequest.getPath());
-                if (n == null) {
-                    throw new KeeperException.NoNodeException();
-                }
-                PrepRequestProcessor.checkACL(zks, request.cnxn, zks.getZKDatabase().aclForNode(n),
-                        ZooDefs.Perms.READ,
-                        request.authInfo, getDataRequest.getPath(), null);
-                Stat stat = new Stat();
-                byte b[] = zks.getZKDatabase().getData(getDataRequest.getPath(), stat,
-                        getDataRequest.getWatch() ? cnxn : null);
-                */
-                Stat stat = new Stat();                
-                byte b[] = request.dracoReturnVal.getBytes();
-                rsp = new GetDataResponse(b, stat);              
                 break;
             }
             case OpCode.setWatches: {

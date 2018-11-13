@@ -86,6 +86,7 @@ public class Request {
     
     public volatile boolean dracoDone = false;
     public volatile String dracoReturnVal;
+    public String dracoPath;
     public ByteBuffer rq;
     
     /**

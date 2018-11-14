@@ -85,7 +85,7 @@ public class Request {
 
     public QuorumVerifier qv = null;
     
-    private final Lock lock = new ReentrantLock();
+    public final Lock lock = new ReentrantLock();
     public final Condition dracoWait = lock.newCondition();
     public volatile String dracoReturnVal;
     public String dracoPath;

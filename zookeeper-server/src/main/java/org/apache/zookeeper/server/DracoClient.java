@@ -115,14 +115,23 @@ public class DracoClient implements Runnable {
 						ByteBufferInputStream.byteBuffer2Record(rq.rq, create2Request);
 						rq.dracoPath = create2Request.getPath();
 						this.put(rq.dracoPath, 
-			            		new String(create2Request.getData()));						
-						rq.dracoWait.signal();
+			            		new String(create2Request.getData()));	
+						rq.lock.lock();
+						try {
+							rq.dracoWait.signal();
+						} finally {
+							rq.lock.unlock();
+						}
 					} else if (rq.type == OpCode.getData) {
 						GetDataRequest getDataRequest = new GetDataRequest();                
 		                ByteBufferInputStream.byteBuffer2Record(rq.request,
 		                        getDataRequest);
 			            rq.dracoReturnVal = this.get(getDataRequest.getPath());
-			            rq.dracoWait.signal();
+			            try {
+							rq.dracoWait.signal();
+						} finally {
+							rq.lock.unlock();
+						}
 					}
 				}
 			} catch (IOException e) {

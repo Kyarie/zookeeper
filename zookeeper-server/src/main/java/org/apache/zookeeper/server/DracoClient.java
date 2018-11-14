@@ -128,7 +128,6 @@ public class DracoClient implements Runnable {
 		                ByteBufferInputStream.byteBuffer2Record(rq.request,
 		                        getDataRequest);
 			            rq.dracoReturnVal = this.get(getDataRequest.getPath());
-			            rq.dracoDone = true;
 			            rq.lock.lock();
 			            try {
 			            	rq.dracoDone = true;

@@ -95,7 +95,9 @@ public class Request {
     public void dracoWaitUntilDone() throws InterruptedException {
     	lock.lock();
     	try {
-    		dracoWait.await();
+    		if (!dracoDone) {
+    			dracoWait.await();
+    		}
     	} finally {
     		lock.unlock();
     	}

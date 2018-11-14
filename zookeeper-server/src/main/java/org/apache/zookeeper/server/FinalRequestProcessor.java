@@ -90,13 +90,10 @@ public class FinalRequestProcessor implements RequestProcessor {
     }
 
     public void processRequest(Request request) { 
-    	long startTime = Time.currentElapsedTime();
         if (request.type == OpCode.create || 
         		request.type == OpCode.getData) {
 	        try {
-	        	if (!request.dracoDone) {
-	        		request.dracoWaitUntilDone();
-	        	}
+	        	request.dracoWaitUntilDone();
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}

@@ -116,13 +116,13 @@ public class DracoClient implements Runnable {
 						rq.dracoPath = create2Request.getPath();
 						this.put(rq.dracoPath, 
 			            		new String(create2Request.getData()));						
-						rq.dracoDone = true;
+						rq.dracoWait.signal();
 					} else if (rq.type == OpCode.getData) {
-						 GetDataRequest getDataRequest = new GetDataRequest();                
+						GetDataRequest getDataRequest = new GetDataRequest();                
 		                ByteBufferInputStream.byteBuffer2Record(rq.request,
 		                        getDataRequest);
-			             rq.dracoReturnVal = this.get(getDataRequest.getPath());
-			             rq.dracoDone = true;
+			            rq.dracoReturnVal = this.get(getDataRequest.getPath());
+			            rq.dracoWait.signal();
 					}
 				}
 			} catch (IOException e) {

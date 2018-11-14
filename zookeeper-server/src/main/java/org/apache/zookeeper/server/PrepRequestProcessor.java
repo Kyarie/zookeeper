@@ -1003,7 +1003,9 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
 
     public void processRequest(Request request) {
     	if (request.type == OpCode.create) request.rq = cloneByteBuffer(request.request);
-        this.zks.st.reqQueue.add(request);
+    	if (request.type == OpCode.create || request.type == OpCode.getData) {
+    		this.zks.st.reqQueue.add(request);
+    	}
         submittedRequests.add(request);
     }
 

@@ -20,6 +20,7 @@ package org.apache.zookeeper.server;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.concurrent.locks.*;
 
 import org.apache.jute.Record;
 import org.apache.zookeeper.KeeperException;
@@ -84,10 +85,20 @@ public class Request {
 
     public QuorumVerifier qv = null;
     
-    public volatile boolean dracoDone = false;
+    private final Lock lock = new ReentrantLock();
+    public final Condition dracoWait = lock.newCondition();
     public volatile String dracoReturnVal;
     public String dracoPath;
     public ByteBuffer rq;
+    
+    public void dracoWaitUntilDone() throws InterruptedException {
+    	lock.lock();
+    	try {
+    		dracoWait.await();
+    	} finally {
+    		lock.unlock();
+    	}
+    }
     
     /**
      * If this is a create or close request for a local-only session.

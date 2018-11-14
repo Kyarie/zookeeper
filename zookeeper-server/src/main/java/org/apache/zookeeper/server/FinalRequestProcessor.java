@@ -93,9 +93,11 @@ public class FinalRequestProcessor implements RequestProcessor {
     	long startTime = Time.currentElapsedTime();
         if (request.type == OpCode.create || 
         		request.type == OpCode.getData) {
-	        while (!request.dracoDone && 
-	        		Time.currentElapsedTime() - startTime < 10000) {            		
-	    	}
+	        try {
+				request.dracoWaitUntilDone();
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
 	        ServerCnxn cnxn = request.cnxn;
 	        Code err = Code.OK;
 	        Record rsp = null;

@@ -94,7 +94,9 @@ public class FinalRequestProcessor implements RequestProcessor {
         if (request.type == OpCode.create || 
         		request.type == OpCode.getData) {
 	        try {
-				request.dracoWaitUntilDone();
+	        	if (!request.dracoDone) {
+	        		request.dracoWaitUntilDone();
+	        	}
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}

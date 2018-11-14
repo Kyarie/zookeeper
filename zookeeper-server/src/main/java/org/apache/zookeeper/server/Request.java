@@ -87,7 +87,8 @@ public class Request {
     
     public final Lock lock = new ReentrantLock();
     public final Condition dracoWait = lock.newCondition();
-    public volatile String dracoReturnVal;
+    public boolean dracoDone;
+    public String dracoReturnVal;
     public String dracoPath;
     public ByteBuffer rq;
     

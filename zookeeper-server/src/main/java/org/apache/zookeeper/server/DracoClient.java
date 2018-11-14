@@ -115,7 +115,8 @@ public class DracoClient implements Runnable {
 						ByteBufferInputStream.byteBuffer2Record(rq.rq, create2Request);
 						rq.dracoPath = create2Request.getPath();
 						this.put(rq.dracoPath, 
-			            		new String(create2Request.getData()));	
+			            		new String(create2Request.getData()));
+						rq.dracoDone = true;
 						rq.lock.lock();
 						try {
 							rq.dracoWait.signal();
@@ -127,6 +128,8 @@ public class DracoClient implements Runnable {
 		                ByteBufferInputStream.byteBuffer2Record(rq.request,
 		                        getDataRequest);
 			            rq.dracoReturnVal = this.get(getDataRequest.getPath());
+			            rq.dracoDone = true;
+			            rq.lock.lock();
 			            try {
 							rq.dracoWait.signal();
 						} finally {

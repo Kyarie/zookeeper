@@ -106,39 +106,40 @@ public class DracoClient implements Runnable {
 	public void run() {
 		LOG.info("Running thread " + threadName);
 		while (true) {
-			Request rq = this.st.reqQueue.poll();
+			Request rq;
 			try {
-				if (rq != null) {
-					if (debug) LOG.info("Draco req " + rq.type);
-					if (rq.type == OpCode.create) {
-						CreateRequest create2Request = new CreateRequest();
-						ByteBufferInputStream.byteBuffer2Record(rq.rq, create2Request);
-						rq.dracoPath = create2Request.getPath();
-						this.put(rq.dracoPath, 
-			            		new String(create2Request.getData()));						
-						rq.lock.lock();
-						try {
-							rq.dracoDone = true;
-							rq.dracoWait.signal();
-						} finally {
-							rq.lock.unlock();
-						}
-					} else if (rq.type == OpCode.getData) {
-						GetDataRequest getDataRequest = new GetDataRequest();                
-		                ByteBufferInputStream.byteBuffer2Record(rq.request,
-		                        getDataRequest);
-			            rq.dracoReturnVal = this.get(getDataRequest.getPath());
-			            rq.lock.lock();
-			            try {
-			            	rq.dracoDone = true;
-							rq.dracoWait.signal();
-						} finally {
-							rq.lock.unlock();
-						}
+				rq = this.st.reqQueue.take();
+				if (debug) LOG.info("Draco req " + rq.type);
+				if (rq.type == OpCode.create) {
+					CreateRequest create2Request = new CreateRequest();
+					ByteBufferInputStream.byteBuffer2Record(rq.rq, create2Request);
+					rq.dracoPath = create2Request.getPath();
+					this.put(rq.dracoPath, 
+		            		new String(create2Request.getData()));						
+					rq.lock.lock();
+					try {
+						rq.dracoDone = true;
+						rq.dracoWait.signal();
+					} finally {
+						rq.lock.unlock();
+					}
+				} else if (rq.type == OpCode.getData) {
+					GetDataRequest getDataRequest = new GetDataRequest();                
+	                ByteBufferInputStream.byteBuffer2Record(rq.request,
+	                        getDataRequest);
+		            rq.dracoReturnVal = this.get(getDataRequest.getPath());
+		            rq.lock.lock();
+		            try {
+		            	rq.dracoDone = true;
+						rq.dracoWait.signal();
+					} finally {
+						rq.lock.unlock();
 					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
 			}
 		}
 	}

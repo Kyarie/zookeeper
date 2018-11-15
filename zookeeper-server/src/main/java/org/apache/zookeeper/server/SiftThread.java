@@ -1,12 +1,12 @@
 package org.apache.zookeeper.server;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class SiftThread {	
 
-	public final ConcurrentLinkedQueue<Request> reqQueue = 
-			new ConcurrentLinkedQueue<Request>();
+	public final LinkedBlockingQueue<Request> reqQueue = 
+			new LinkedBlockingQueue<Request>();
 	private int numThreads;
 	private List<DracoClient> dracoClients = new ArrayList<DracoClient>();
 	

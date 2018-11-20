@@ -108,7 +108,6 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     public final static Exception ok = new Exception("No prob");
     protected RequestProcessor firstProcessor;
     protected volatile State state = State.INITIAL;
-    protected SiftThread st;
 
     protected enum State {
         INITIAL, RUNNING, SHUTDOWN, ERROR
@@ -469,8 +468,6 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
         startSessionTracker();
         setupRequestProcessors();
-        st = new SiftThread();
-        st.launchSiftClients();
 
         registerJMX();
 
@@ -483,7 +480,10 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         //RequestProcessor syncProcessor = new SyncRequestProcessor(this,
                 //finalProcessor);
         //((SyncRequestProcessor)syncProcessor).start();
-        firstProcessor = new PrepRequestProcessor(this, finalProcessor);
+        DracoRequestProcessor dracoProcessor = 
+        		new DracoRequestProcessor(finalProcessor, Long.toString(getServerId()));
+        dracoProcessor.start();
+        firstProcessor = new PrepRequestProcessor(this, dracoProcessor);
         ((PrepRequestProcessor)firstProcessor).start();
     }
 

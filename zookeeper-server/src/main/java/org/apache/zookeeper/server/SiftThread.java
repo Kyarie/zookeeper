@@ -8,17 +8,18 @@ public class SiftThread {
 	public final LinkedBlockingQueue<Request> reqQueue = 
 			new LinkedBlockingQueue<Request>();
 	private int numThreads;
-	private List<DracoClient> dracoClients = new ArrayList<DracoClient>();
+	private List<DracoRequestProcessor> dracoClients = new ArrayList<DracoRequestProcessor>();
 	
 	public SiftThread () {
 		this.numThreads = 5;
 	}
 
 	public void launchSiftClients() {
+		/*
 		for (int i = 0; i < numThreads; i++) {
-			DracoClient dc = new DracoClient(this, i);
+			DracoRequestProcessor dc = new DracoRequestProcessor(this, i);
 			dc.start();
 			dracoClients.add(dc);
-		}		
+		}*/
 	}
 }

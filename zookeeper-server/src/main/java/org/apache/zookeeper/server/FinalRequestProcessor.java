@@ -92,11 +92,12 @@ public class FinalRequestProcessor implements RequestProcessor {
     public void processRequest(Request request) { 
         if (request.type == OpCode.create || 
         		request.type == OpCode.getData) {
+        	/*
 	        try {
 	        	request.dracoWaitUntilDone();
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
-			}
+			}*/
 	        ServerCnxn cnxn = request.cnxn;
 	        Code err = Code.OK;
 	        Record rsp = null;

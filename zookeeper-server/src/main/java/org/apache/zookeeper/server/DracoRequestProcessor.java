@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -26,7 +27,9 @@ public class DracoRequestProcessor extends ZooKeeperThread
 	private static final Logger LOG = 
 			LoggerFactory.getLogger(DracoRequestProcessor.class);
 	
-	private Socket socket = null;
+	//private Socket socket = null;
+	private LinkedBlockingQueue<Socket> sockets = new LinkedBlockingQueue<Socket>();
+	int socket_num = 4;
 	int READ_REQUEST = 1;
 	int WRITE_REQUEST = 2;
 	int WRITE_OK = 1000;
@@ -62,8 +65,11 @@ public class DracoRequestProcessor extends ZooKeeperThread
     	int port = 5500;
     	this.nextProcessor = nextProcessor;
     	try {
-			socket = new Socket(InetAddress.getLocalHost(), port);
-			socket.setTcpNoDelay(true);
+    		for (int i = 0; i < socket_num; i++) {
+				Socket socket = new Socket(InetAddress.getLocalHost(), port);
+				socket.setTcpNoDelay(true);
+				sockets.add(socket);
+    		}
 		} catch (UnknownHostException e) {
 			LOG.error(e.getMessage());
 		} catch (IOException e) {
@@ -72,79 +78,15 @@ public class DracoRequestProcessor extends ZooKeeperThread
 		}
     }    
     
-    public String get(String key) throws IOException {
-    	int bufSize = 8 + key.length();
-    	ByteBuffer buffer = ByteBuffer.allocate(bufSize);
-    	buffer.putInt(READ_REQUEST);
-    	buffer.putInt(key.length());
-    	buffer.put(key.getBytes());
-    	byte[] data = buffer.array();
-    	if (debug) LOG.info("Sending data key " + key);
-		socket.getOutputStream().write(data); 
-		
-    	byte[] valLenBt = new byte[4];
-		int rc = socket.getInputStream().read(valLenBt);
-		ByteBuffer valLenBuf = ByteBuffer.wrap(valLenBt);
-		int valLen = valLenBuf.getInt();
-		if (debug) LOG.info("value length " + valLen);
-		
-		byte[] valueBt = new byte[valLen];
-		rc = socket.getInputStream().read(valueBt);
-		String value = new String (valueBt);
-		if (debug) LOG.info("value " + value);    	
-    	return value;
-    }
-
-    public void put(String key, String value) throws IOException {
-        long start = System.nanoTime(); 
-    	int bufSize = 12 + key.length() + value.length();
-    	ByteBuffer buffer = ByteBuffer.allocate(bufSize);
-    	buffer.putInt(WRITE_REQUEST);
-    	buffer.putInt(key.length());
-    	buffer.put(key.getBytes());
-    	buffer.putInt(value.length());
-    	buffer.put(value.getBytes());
-    	byte[] data = buffer.array();
-    	if (debug) LOG.info("Sending data key " + key);
-		socket.getOutputStream().write(data);    	
-		
-    	byte[] ackBt = new byte[4];
-		int rc = socket.getInputStream().read(ackBt);
-		ByteBuffer ackBuf = ByteBuffer.wrap(ackBt);
-		int ack = ackBuf.getInt();
-		if (debug) LOG.info("ack " + ack);
-        if (lat_test) {
-        	long end = System.nanoTime(); 
-        	long microseconds = (end-start)/1000; 
-        	LOG.info("Final Duration: " + microseconds); 
-        }
-       }
-    
 	public void run() {
 		LOG.info("Running thread " + threadName);
 		while (!stopped) {
 			Request rq;
+			Socket socket; 
 			try {
-				rq = this.queuedRequests.take();
-				if (debug) LOG.info("Draco req " + rq.type);
-				if (rq.type == OpCode.create) {
-					CreateRequest create2Request = new CreateRequest();
-					ByteBufferInputStream.byteBuffer2Record(rq.rq, create2Request);
-					rq.dracoPath = create2Request.getPath();
-					this.put(rq.dracoPath, 
-		            		new String(create2Request.getData()));						
-					rq.lock.lock();
-					rq.dracoDone = true;
-				} else if (rq.type == OpCode.getData) {
-					GetDataRequest getDataRequest = new GetDataRequest();                
-	                ByteBufferInputStream.byteBuffer2Record(rq.request,
-	                        getDataRequest);
-		            rq.dracoReturnVal = this.get(getDataRequest.getPath());
-		            rq.dracoDone = true;
-				}
-				sendToNextProcessor(rq);
-			} catch (IOException e) {
-				e.printStackTrace();
+				rq = this.queuedRequests.take();	
+				socket = sockets.take();
+				sendToNextProcessor(rq, socket);
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}
@@ -171,32 +113,98 @@ public class DracoRequestProcessor extends ZooKeeperThread
      * Schedule final request processing; if a worker thread pool is not being
      * used, processing is done directly by this thread.
      */
-    private void sendToNextProcessor(Request request) {
-        workerPool.schedule(new DracoWorkRequest(request), request.sessionId);
+    private void sendToNextProcessor(Request request, Socket socket) {
+		workerPool.schedule(new DracoWorkRequest(request, socket), request.sessionId); 
     }
     
-    /**
-     * CommitWorkRequest is a small wrapper class to allow
-     * downstream processing to be run using the WorkerService
-     */
     private class DracoWorkRequest extends WorkerService.WorkRequest {
-        private final Request request;
+        private final Request rq;
+        private final Socket socket;
 
-        DracoWorkRequest(Request request) {
-            this.request = request;
+        DracoWorkRequest(Request request, Socket socket) {
+            this.rq = request;
+            this.socket = socket;
         }
 
+        public String get(String key) throws IOException {
+        	int bufSize = 8 + key.length();
+        	ByteBuffer buffer = ByteBuffer.allocate(bufSize);
+        	buffer.putInt(READ_REQUEST);
+        	buffer.putInt(key.length());
+        	buffer.put(key.getBytes());
+        	byte[] data = buffer.array();
+        	if (debug) LOG.info("Sending data key " + key);
+    		socket.getOutputStream().write(data); 
+    		
+        	byte[] valLenBt = new byte[4];
+    		int rc = socket.getInputStream().read(valLenBt);
+    		ByteBuffer valLenBuf = ByteBuffer.wrap(valLenBt);
+    		int valLen = valLenBuf.getInt();
+    		if (debug) LOG.info("value length " + valLen);
+    		
+    		byte[] valueBt = new byte[valLen];
+    		rc = socket.getInputStream().read(valueBt);
+    		String value = new String (valueBt);
+    		if (debug) LOG.info("value " + value);    	
+        	return value;
+        }
+
+        public void put(String key, String value) throws IOException {
+            long start = System.nanoTime(); 
+        	int bufSize = 12 + key.length() + value.length();
+        	ByteBuffer buffer = ByteBuffer.allocate(bufSize);
+        	buffer.putInt(WRITE_REQUEST);
+        	buffer.putInt(key.length());
+        	buffer.put(key.getBytes());
+        	buffer.putInt(value.length());
+        	buffer.put(value.getBytes());
+        	byte[] data = buffer.array();
+        	if (debug) LOG.info("Sending data key " + key);
+    		socket.getOutputStream().write(data);    	
+    		
+        	byte[] ackBt = new byte[4];
+    		int rc = socket.getInputStream().read(ackBt);
+    		ByteBuffer ackBuf = ByteBuffer.wrap(ackBt);
+    		int ack = ackBuf.getInt();
+    		if (debug) LOG.info("ack " + ack);
+            if (lat_test) {
+            	long end = System.nanoTime(); 
+            	long microseconds = (end-start)/1000; 
+            	LOG.info("Final Duration: " + microseconds); 
+            }
+        }
+        
         @Override
         public void cleanup() {
             if (!stopped) {
                 LOG.error("Exception thrown by downstream processor,"
                           + " unable to continue.");
-                DracoRequestProcessor.this.halt();
+                DracoRequestProcessor.this.halt();                
             }
         }
 
         public void doWork() throws RequestProcessorException {
-            nextProcessor.processRequest(request);
+        	if (debug) LOG.info("Draco req " + rq.type);
+        	try {
+				if (rq.type == OpCode.create) {
+					CreateRequest create2Request = new CreateRequest();
+					ByteBufferInputStream.byteBuffer2Record(rq.rq, create2Request);
+					rq.dracoPath = create2Request.getPath();
+					put(rq.dracoPath, new String(create2Request.getData()));						
+					rq.lock.lock();
+					rq.dracoDone = true;
+				} else if (rq.type == OpCode.getData) {
+					GetDataRequest getDataRequest = new GetDataRequest();                
+	                ByteBufferInputStream.byteBuffer2Record(rq.request,
+	                        getDataRequest);
+		            rq.dracoReturnVal = get(getDataRequest.getPath());
+		            rq.dracoDone = true;
+				}
+        	} catch (IOException e) {
+				e.printStackTrace();
+			}
+        	DracoRequestProcessor.this.sockets.add(socket);
+            nextProcessor.processRequest(rq);
         }
     }
     

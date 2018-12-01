@@ -1,3 +1,5 @@
+//package com.company;
+
 public interface OpCode {
     public final int notification = 0;
 

@@ -26,7 +26,7 @@ public class DracoRequestProcessor extends Thread {
 
     //RequestProcessor nextProcessor;
 
-    protected volatile boolean stopped = false;
+    volatile boolean stopped = false;
     private long workerShutdownTimeoutMS;
     //protected WorkerService workerPool;
 
@@ -143,7 +143,7 @@ public class DracoRequestProcessor extends Thread {
         }
 
         public void run() {
-            while (DracoRequestProcessor.this.stopped) {
+            while (!DracoRequestProcessor.this.stopped) {
                 try {
                     Request rq = DracoRequestProcessor.this.queuedRequests.take();
                     if (rq.type == OpCode.create) {
@@ -166,6 +166,7 @@ public class DracoRequestProcessor extends Thread {
 
         // Start Sender thread
         public void start() {
+            if (debug) System.out.println("Start thread " + this.thread_name);
             if (t == null) {
                 t = new Thread (this, this.thread_name);
                 t.start();

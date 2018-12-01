@@ -7,7 +7,7 @@ public class DracoRequestProcessor extends Thread {
 
     //private Socket socket = null;
     private LinkedBlockingQueue<Socket> sockets = new LinkedBlockingQueue<Socket>();
-    int socket_num = 12;
+    int socket_num = 2;
     int READ_REQUEST = 1;
     int WRITE_REQUEST = 2;
     int WRITE_OK = 1000;
@@ -28,9 +28,10 @@ public class DracoRequestProcessor extends Thread {
     private long workerShutdownTimeoutMS;
     //protected WorkerService workerPool;
 
-    public DracoRequestProcessor(String id) {
+    public DracoRequestProcessor(String id, int socket_num) {
         //super("DracoRequestProcessor:" + id);
         int port = 5500;
+	this.socket_num = socket_num;
         //this.nextProcessor = nextProcessor;
         try {
             for (int i = 0; i < socket_num; i++) {
@@ -51,6 +52,10 @@ public class DracoRequestProcessor extends Thread {
             Socket socket;
             try {
                 rq = this.queuedRequests.take();
+		if (rq.type == OpCode.closeSession) {
+			stopped = true;
+			break;
+		}
                 socket = sockets.take();
                 sendToNextProcessor(rq, socket);
             } catch (InterruptedException e1) {
@@ -72,6 +77,7 @@ public class DracoRequestProcessor extends Thread {
      */
     private void sendToNextProcessor(Request request, Socket socket) {
         //workerPool.schedule(new DracoWorkRequest(request, socket), request.sessionId);
+	//System.out.println("Queue: " + queuedRequests.size() + " " +  sockets.size());
         DracoWorkRequest dwr = new DracoWorkRequest(request, socket);
         dwr.start();
     }
@@ -105,7 +111,7 @@ public class DracoRequestProcessor extends Thread {
 
         public void put(String key, String value) throws IOException {
             long start = System.nanoTime();
-            System.out.println("PUT: " + key + " " + value);
+            //System.out.println("PUT: " + key + " " + value);
             int bufSize = 12 + key.length() + value.length();
             ByteBuffer buffer = ByteBuffer.allocate(bufSize);
             buffer.putInt(WRITE_REQUEST);
@@ -120,7 +126,7 @@ public class DracoRequestProcessor extends Thread {
             int rc = socket.getInputStream().read(ackBt);
             ByteBuffer ackBuf = ByteBuffer.wrap(ackBt);
             int ack = ackBuf.getInt();
-            System.out.println("PUT ACK: " + ack);
+            //System.out.println("PUT ACK: " + ack);
             if (lat_test) {
                 long end = System.nanoTime();
                 long microseconds = (end-start)/1000;

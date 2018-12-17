@@ -204,7 +204,17 @@ public class DracoRequestProcessor extends ZooKeeperThread
 				e.printStackTrace();
 			}
         	DracoRequestProcessor.this.sockets.add(socket);
-            nextProcessor.processRequest(rq);
+        	new Thread() {
+        		public void run() {
+        			Thread.currentThread().setName("Draco" + rq.dracoPath);
+        			try {
+        				nextProcessor.processRequest(rq);
+        			} catch (RequestProcessorException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}                     
+                 }
+             }.start();            
         }
     }
     

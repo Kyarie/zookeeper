@@ -59,6 +59,7 @@ public class DracoRequestProcessor extends ZooKeeperThread
     protected volatile boolean stopped = false;
     private long workerShutdownTimeoutMS;
     protected WorkerService workerPool;
+    protected WorkerService finalPool;
 
     public DracoRequestProcessor(RequestProcessor nextProcessor, String id) {
     	super("DracoRequestProcessor:" + id);
@@ -101,10 +102,17 @@ public class DracoRequestProcessor extends ZooKeeperThread
             ZOOKEEPER_COMMIT_PROC_NUM_WORKER_THREADS, numCores);
         workerShutdownTimeoutMS = Long.getLong(
             ZOOKEEPER_COMMIT_PROC_SHUTDOWN_TIMEOUT, 5000);
+        
+        int numFinalThreads = numWorkerThreads;
+        LOG.info("Num threads: " + numFinalThreads);
 
         if (workerPool == null) {
             workerPool = new WorkerService(
                 "CommitProcWork", numWorkerThreads, true);
+        }
+        if (finalPool == null) {
+        	finalPool = new WorkerService(
+                    "FinalProcWork", numFinalThreads, true);
         }
         super.start();
     }
@@ -204,17 +212,20 @@ public class DracoRequestProcessor extends ZooKeeperThread
 				e.printStackTrace();
 			}
         	DracoRequestProcessor.this.sockets.add(socket);
-        	new Thread() {
-        		public void run() {
-        			Thread.currentThread().setName("Draco" + rq.dracoPath);
-        			try {
-        				nextProcessor.processRequest(rq);
-        			} catch (RequestProcessorException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}                     
-                 }
-             }.start();            
+        	DracoRequestProcessor.this.finalPool.schedule(new FinalWorkRequest(rq), rq.sessionId); 
+               
+        }
+    }
+    
+    private class FinalWorkRequest extends WorkerService.WorkRequest {
+        private final Request request;
+
+        FinalWorkRequest(Request request) {
+            this.request = request;
+        }
+
+        public void doWork() throws RequestProcessorException {
+            nextProcessor.processRequest(request);
         }
     }
     

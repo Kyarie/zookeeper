@@ -17,7 +17,7 @@ public class DracoRequestProcessor extends Thread {
     InputStreamReader in = null;
     DataOutputStream dout = null;
     DataInputStream din = null;
-    boolean debug = false;
+    boolean debug = true;
     boolean lat_test = false;
     String threadName;
 
@@ -114,7 +114,7 @@ public class DracoRequestProcessor extends Thread {
 
         public void put(String key, String value) throws IOException {
             long start = System.nanoTime();
-            if (debug) System.out.println("PUT: " + key + " " + value);
+            //if (debug) System.out.println("PUT: " + key + " " + value);
             int bufSize = 12 + key.length() + value.length();
             ByteBuffer buffer = ByteBuffer.allocate(bufSize);
             buffer.putInt(WRITE_REQUEST);
@@ -145,6 +145,7 @@ public class DracoRequestProcessor extends Thread {
         public void run() {
             while (!DracoRequestProcessor.this.stopped) {
                 try {
+                    if (debug) System.out.println("Queue: " + DracoRequestProcessor.this.queuedRequests.size());
                     Request rq = DracoRequestProcessor.this.queuedRequests.take();
                     if (rq.type == OpCode.create) {
                         put(rq.path, rq.value);

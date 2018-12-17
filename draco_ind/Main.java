@@ -4,7 +4,7 @@ public class Main {
 
     public static void main(String[] args) { 
         int total_req = 5000;
-        DracoRequestProcessor drp = new DracoRequestProcessor("i", 40);
+        DracoRequestProcessor drp = new DracoRequestProcessor("i", 20);
         long start = System.nanoTime();
         for (int i = 0; i < total_req; i++) {
             Request rq = new Request(OpCode.create, "key" + i, "value" + i);
@@ -16,5 +16,6 @@ public class Main {
         long end = System.nanoTime();
         long microseconds = (end-start)/1000;
         System.out.println("********** Duration ms/op: " + microseconds/(total_req * 1000.0));
+	System.out.println("********** Throughput op/ms: " + total_req/(microseconds/1000.0));
     }
 }

@@ -91,7 +91,8 @@ public class FinalRequestProcessor implements RequestProcessor {
 
     public void processRequest(Request request) { 
         if (request.type == OpCode.create || 
-        		request.type == OpCode.getData) {
+        		request.type == OpCode.getData ||
+        				request.type == OpCode.setData) {
         	/*
 	        try {
 	        	request.dracoWaitUntilDone();
@@ -107,6 +108,9 @@ public class FinalRequestProcessor implements RequestProcessor {
 	        if (request.type == OpCode.create) {
 	        	lastOp = "CREA";
                 rsp = new CreateResponse(request.dracoPath);
+            } else if (request.type == OpCode.setData) {
+            	lastOp = "SETD";
+            	rsp = new CreateResponse(request.dracoPath);
             } else {
             	lastOp = "GETD";
                 Stat stat = new Stat();                
@@ -520,7 +524,7 @@ public class FinalRequestProcessor implements RequestProcessor {
         if (request.cnxn == null) {
             return;
         }
-        long currentTime = Time.currentElapsedTime();
+        long currentTime = System.nanoTime();
         zks.serverStats().updateLatency(request, currentTime);
         request.cnxn.updateStatsForResponse(request.cxid, lastZxid, lastOp,
                 request.createTime, currentTime);

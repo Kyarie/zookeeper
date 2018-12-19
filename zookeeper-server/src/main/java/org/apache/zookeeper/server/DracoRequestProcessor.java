@@ -29,7 +29,7 @@ public class DracoRequestProcessor extends ZooKeeperThread
 	
 	//private Socket socket = null;
 	private LinkedBlockingQueue<Socket> sockets = new LinkedBlockingQueue<Socket>();
-	int socket_num = 4;
+	int socket_num = 12;
 	int READ_REQUEST = 1;
 	int WRITE_REQUEST = 2;
 	int WRITE_OK = 1000;
@@ -194,7 +194,7 @@ public class DracoRequestProcessor extends ZooKeeperThread
         public void doWork() throws RequestProcessorException {
         	if (debug) LOG.info("Draco req " + rq.type);
         	try {
-				if (rq.type == OpCode.create) {
+				if (rq.type == OpCode.create || rq.type == OpCode.setData) {
 					CreateRequest create2Request = new CreateRequest();
 					ByteBufferInputStream.byteBuffer2Record(rq.rq, create2Request);
 					rq.dracoPath = create2Request.getPath();

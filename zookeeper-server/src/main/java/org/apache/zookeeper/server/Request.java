@@ -77,7 +77,7 @@ public class Request {
 
     public final List<Id> authInfo;
 
-    public final long createTime = Time.currentElapsedTime();
+    public final long createTime = System.nanoTime();
 
     private Object owner;
 

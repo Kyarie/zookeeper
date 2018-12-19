@@ -104,6 +104,7 @@ public class FinalRequestProcessor implements RequestProcessor {
 	        Record rsp = null;
 	        String lastOp = "NA";
 	        ProcessTxnResult rc = new ProcessTxnResult();
+                rc.stat = new Stat();
 	        long lastZxid = zks.getZKDatabase().getDataTreeLastProcessedZxid();
 	        zks.decInProcess();
 	        if (request.type == OpCode.create) {

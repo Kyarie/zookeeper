@@ -103,6 +103,7 @@ public class FinalRequestProcessor implements RequestProcessor {
 	        Code err = Code.OK;
 	        Record rsp = null;
 	        String lastOp = "NA";
+	        ProcessTxnResult rc = new ProcessTxnResult();
 	        long lastZxid = zks.getZKDatabase().getDataTreeLastProcessedZxid();
 	        zks.decInProcess();
 	        if (request.type == OpCode.create) {
@@ -110,7 +111,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                 rsp = new CreateResponse(request.dracoPath);
             } else if (request.type == OpCode.setData) {
             	lastOp = "SETD";
-            	rsp = new CreateResponse(request.dracoPath);
+            	rsp = new SetDataResponse(rc.stat);
             } else {
             	lastOp = "GETD";
                 Stat stat = new Stat();                

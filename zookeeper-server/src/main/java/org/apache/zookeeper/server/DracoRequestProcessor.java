@@ -16,6 +16,7 @@ import org.apache.zookeeper.ZooDefs.OpCode;
 import org.apache.zookeeper.proto.CreateRequest;
 import org.apache.zookeeper.proto.CreateTTLRequest;
 import org.apache.zookeeper.proto.GetDataRequest;
+import org.apache.zookeeper.proto.SetDataRequest;
 import org.apache.zookeeper.server.RequestProcessor.RequestProcessorException;
 import org.apache.zookeeper.server.quorum.CommitProcessor;
 import org.apache.zookeeper.txn.CreateTxn;
@@ -194,12 +195,17 @@ public class DracoRequestProcessor extends ZooKeeperThread
         public void doWork() throws RequestProcessorException {
         	if (debug) LOG.info("Draco req " + rq.type);
         	try {
-				if (rq.type == OpCode.create || rq.type == OpCode.setData) {
+				if (rq.type == OpCode.create) {
 					CreateRequest create2Request = new CreateRequest();
 					ByteBufferInputStream.byteBuffer2Record(rq.rq, create2Request);
 					rq.dracoPath = create2Request.getPath();
 					put(rq.dracoPath, new String(create2Request.getData()));						
-					rq.lock.lock();
+					rq.dracoDone = true;
+				} else if (rq.type == OpCode.setData) {
+					SetDataRequest setDataRequest = new SetDataRequest();
+					ByteBufferInputStream.byteBuffer2Record(rq.rq, setDataRequest);
+					rq.dracoPath = setDataRequest.getPath();
+					put(rq.dracoPath, new String(setDataRequest.getData()));						
 					rq.dracoDone = true;
 				} else if (rq.type == OpCode.getData) {
 					GetDataRequest getDataRequest = new GetDataRequest();                
